@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'loginPage.dart';
 import 'reportDetailPage.dart';
 import 'reportFormPage.dart';
-import 'admin.dart';
 
 void main() {
   runApp(MyApp());
