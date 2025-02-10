@@ -18,12 +18,10 @@ class ReportDetailPage extends StatelessWidget {
           iconTheme: const IconThemeData(color: Colors.black),
         ),
         body: Center(
-          // จัดให้อยู่ตรงกลาง
           child: ConstrainedBox(
             constraints:
                 const BoxConstraints(maxWidth: 700), // จำกัดกว้างสุด 700px
             child: Card(
-              // ใช้ Card เพื่อเพิ่มเงา และพื้นหลัง
               color: Colors.white, // พื้นหลังฟอร์ม
               elevation: 5, // เพิ่มเงา
               shape: RoundedRectangleBorder(
@@ -133,7 +131,7 @@ class ReportDetailPage extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 10),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildTimelineStep(
                   "รอรับเรื่อง", "15 ธ.ค. 67\n12:00 น.", Colors.red),
