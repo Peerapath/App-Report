@@ -2,6 +2,7 @@ import 'package:application/admin.dart';
 import 'package:flutter/material.dart';
 
 import 'registerPage.dart';
+import 'user.dart';
 
 // 🔓 เข้าสู่ระบบ
 class LoginPage extends StatelessWidget {
@@ -62,8 +63,7 @@ class LoginPage extends StatelessWidget {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) => AdminPage()),
+                            MaterialPageRoute(builder: (context) => userPage()),
                           );
                           // เชื่อมต่อระบบล็อกอินที่นี่
                           ScaffoldMessenger.of(context).showSnackBar(

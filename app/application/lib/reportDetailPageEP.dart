@@ -3,19 +3,22 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'reportSentPage.dart';
 
-class ReportDetailPage extends StatefulWidget {
+
+class ReportDetailPageEP extends StatefulWidget {
   final int reportId;
 
-  const ReportDetailPage({super.key, required this.reportId});
+  const ReportDetailPageEP({super.key, required this.reportId});
 
   @override
-  _ReportDetailPageState createState() => _ReportDetailPageState();
+  _ReportDetailPageEPState createState() => _ReportDetailPageEPState();
 }
 
-class _ReportDetailPageState extends State<ReportDetailPage> {
+class _ReportDetailPageEPState extends State<ReportDetailPageEP> {
   Map<String, dynamic>? report;
   bool isLoading = true;
+
 
   @override
   void initState() {
@@ -27,9 +30,8 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
     final url = Uri.parse(
         "http://26.21.85.254:8080/Reportig/api/report.php?id=${widget.reportId}");
     final response = await http.get(url);
-
+    final List<dynamic> data = json.decode(response.body);
     if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
       if (data.isNotEmpty) {
         setState(() {
           report = data[0];
@@ -40,6 +42,32 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> updateStatus() async {
+    final url = Uri.parse(
+        "http://26.21.85.254:8080/Reportig/api/report.php/${widget.reportId}");
+    final response = await http.put(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        "date_time": report!["date_time"],
+        "description": report!["report_description"],
+        "problem_type_id": 2,
+        "location": report!["location"],
+        "urgency_id": 1,
+        "status_id": 2,
+        "f_name": "สมชาย",
+        "l_name": "ใจดี",
+        "email": "somchai@example.com"
+      }),
+    );
+    if (response.statusCode == 200) {
+      fetchReportData(); // รีโหลดข้อมูลใหม่หลังจากอัปเดต
+    } else {
+      print("Error updating status: ${response.body}");
+      print("id: ${widget.reportId}");
     }
   }
 
@@ -107,9 +135,13 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                               _buildDetailSection(
                                   "วันที่แจ้ง", report!["date_time"]),
                               const SizedBox(height: 20),
-                              _buildLocationMap(),
-                              const SizedBox(height: 20),
                               _buildTimeline(),
+                              const SizedBox(height: 20),
+                              _buildLocationMap(),
+                              if (report!["report_status"] == "รอรับเรื่อง") 
+                                _buildButtonState()
+                              else if (report!["report_status"] == "ดำเนินงาน")
+                                _buildButtonsent()
                             ],
                           ),
                         ),
@@ -186,47 +218,41 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
         color: Colors.green[50],
         borderRadius: BorderRadius.circular(10),
       ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 700), // จำกัดกว้างสุด 700px
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("ไทม์ไลน์การดำเนินการ",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 10),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                if (report!["tasks"] != null)
-                  ...report!["tasks"].map<Widget>((task) {
-                    // แปลงวันที่จาก String เป็น DateTime
-                    DateTime dateTime = DateTime.parse(task["task_date_time"]);
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("ไทม์ไลน์การดำเนินการ",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              if (report!["tasks"] != null)
+                ...report!["tasks"].map<Widget>((task) {
+                  // แปลงวันที่จาก String เป็น DateTime
+                  DateTime dateTime = DateTime.parse(task["task_date_time"]);
 
-                    // แปลงเป็นรูปแบบ ddMMyyyyHHmm
-                    String formattedDate =
-                        DateFormat("dd-MM-yyyy HH:mm").format(dateTime);
+                  // แปลงเป็นรูปแบบ ddMMyyyyHHmm
+                  String formattedDate =
+                      DateFormat("dd-MM-yyyy HH:mm").format(dateTime);
 
-                    Text(task["task_description"],
-                        style: TextStyle(fontWeight: FontWeight.bold));
-
-                    return _buildTimelineStep(
-                      task["task_status"],
-                      formattedDate, // ใช้วันที่ที่ฟอร์แมตแล้ว
-                      task['task_status'] == "รอรับเรื่อง"
-                          ? Colors.red
-                          : (task['task_status'] == "ส่งต่อ"
-                              ? Colors.lightBlue
-                              : (task['task_status'] == "ดำเนินงาน"
-                                  ? Colors.orangeAccent
-                                  : (task['task_status'] == "เสร็จสิ้น"
-                                      ? Colors.green
-                                      : Colors.grey))),
-                    );
-                  }).toList(),
-              ],
-            ),
-          ],
-        ),
+                  return _buildTimelineStep(
+                    task["task_status"],
+                    formattedDate, // ใช้วันที่ที่ฟอร์แมตแล้ว
+                    task['task_status'] == "รอรับเรื่อง"
+                        ? Colors.red
+                        : (task['task_status'] == "ส่งต่อ"
+                            ? Colors.lightBlue
+                            : (task['task_status'] == "ดำเนินงาน"
+                                ? Colors.orangeAccent
+                                : (task['task_status'] == "เสร็จสิ้น"
+                                    ? Colors.green
+                                    : Colors.grey))),
+                  );
+                }).toList(),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -238,7 +264,6 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
         const SizedBox(height: 5),
         Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
         Text(time, textAlign: TextAlign.center),
-        const SizedBox(height: 20),
       ],
     );
   }
@@ -272,6 +297,47 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildButtonState() {
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.lightGreenAccent,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+        onPressed: updateStatus,
+        // icon: const Icon(Icons.warning, color: Colors.black),
+        label: const Text("รับงาน",
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+  Widget _buildButtonsent() {
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.lightBlueAccent,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+        onPressed: ()  {
+        Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ReportSentPage()),
+                );
+        },
+        label: const Text("ส่งต่อ",
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+      ),
     );
   }
 }

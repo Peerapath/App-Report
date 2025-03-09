@@ -1,94 +1,23 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:io';
+// import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:dio/dio.dart';
 
-class ApiService {
-  final Dio _dio = Dio();
-
-  Future<Map<String, dynamic>?> createPost(
-      // DatePickerDialog date_time,
-      String description,
-      // int problem_type_id,
-      // String location,
-      // int urgency_id,
-      // int status_id,
-      String f_name,
-      // String l_name,
-      String eamil) async {
-    try {
-      final response = await _dio.post(
-        'http://26.21.85.254:8080/Reportig/api/report.php',
-        data: {
-          "date_time": "2024-02-07 14:30:00",
-          "description": description,
-          "problem_type_id": 2,
-          "location": "ถนนสุขุมวิท 555",
-          "urgency_id": 2,
-          "status_id": 1,
-          "f_name": f_name,
-          "l_name": "ใจดี",
-          "email": eamil,
-        },
-      );
-      print(response.data);
-      return response.data;
-    } catch (e) {
-      print('Error: $e');
-      return null;
-    }
-  }
-}
-
-// 📄 หน้าแจ้งปัญหา
-class ReportFormPage extends StatefulWidget {
-  const ReportFormPage({super.key});
-
+class ReportSentPage extends StatefulWidget {
   @override
-  _ReportFormPageState createState() => _ReportFormPageState();
+  _ReportSentPageState createState() => _ReportSentPageState();
 }
 
-// 📄 หน้าแบบฟอร์ม
-class _ReportFormPageState extends State<ReportFormPage> {
-  final ApiService apiService = ApiService();
+class _ReportSentPageState extends State<ReportSentPage> {
   final TextEditingController _detailController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  String _selectedCategory = "อาคาร";
-  String _selectedUrgency = "ภายใน 3 วัน"; // ค่าตั้งต้นของความเร่งด่วน
+  // final TextEditingController _emailController = TextEditingController();
+  String _selectedCategory = "หน่วยงาน A";
+  // String _selectedUrgency = "ภายใน 3 วัน"; // ค่าตั้งต้นของความเร่งด่วน
   List<File> _selectedImages = []; // สำหรับมือถือ
   List<Uint8List> _selectedImagesWeb = []; // สำหรับเว็บ
-  String responseText = '';
-  DateTime now = DateTime.now();
-
-  void sendPost() async {
-    if (_detailController.text.isEmpty ||
-        _nameController.text.isEmpty ||
-        _emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("กรุณากรอกข้อมูลให้ครบถ้วน")),
-      );
-      return;
-    }
-    final response = await apiService.createPost(
-      _detailController.text,
-      _nameController.text,
-      _emailController.text,
-    );
-    setState(() {
-      responseText = response != null
-          ? 'Post Created: ${response['email']}'
-          : 'Error creating post';
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("ส่งข้อมูลสำเร็จ!")),
-    );
-    // กลับไปหน้าหลัก
-    Navigator.pop(context);
-  }
 
   // 📷 เลือกรูปจากอุปกรณ์
   Future<void> _pickImages() async {
@@ -116,12 +45,12 @@ class _ReportFormPageState extends State<ReportFormPage> {
   }
 
   // Google Maps
-  late GoogleMapController mapController;
-  final LatLng _center = const LatLng(13.7563, 100.5018); // Bangkok
+  // late GoogleMapController mapController;
+  // final LatLng _center = const LatLng(13.7563, 100.5018); // Bangkok
 
-  void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
-  }
+  // void _onMapCreated(GoogleMapController controller) {
+  //   mapController = controller;
+  // }
 
 // ช่องแนบรูปภาพที่ปรับขนาดอัตโนมัติ
   Widget _buildImagePreview(BuildContext context) {
@@ -183,24 +112,16 @@ class _ReportFormPageState extends State<ReportFormPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("รายละเอียดการแจ้งปัญหา"),
-                    TextField(
-                      controller: _detailController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        hintText: "กรุณาพิมพ์รายละเอียดที่ต้องการแจ้ง",
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
                     // Dropdown ประเภทปัญหา
-                    const Text("เลือกประเภทปัญหา"),
+                    const Text("เลือกหน่วยงาน"),
                     DropdownButtonFormField<String>(
                       value: _selectedCategory,
-                      items: ["อาคาร", "ถนน", "ไฟฟ้า", "น้ำเสีย"]
-                          .map((String category) {
+                      items: [
+                        "หน่วยงาน A",
+                        "หน่วยงาน B",
+                        "หน่วยงาน C",
+                        "หน่วยงาน D"
+                      ].map((String category) {
                         return DropdownMenuItem(
                             value: category, child: Text(category));
                       }).toList(),
@@ -217,7 +138,7 @@ class _ReportFormPageState extends State<ReportFormPage> {
                     const SizedBox(height: 10),
 
                     // ชื่อ-นามสกุล
-                    const Text("ชื่อ-นามสกุล ผู้แจ้ง"),
+                      const Text("ชื่อ-นามสกุล"),
                     TextField(
                       controller: _nameController,
                       decoration: InputDecoration(
@@ -226,20 +147,32 @@ class _ReportFormPageState extends State<ReportFormPage> {
                             borderRadius: BorderRadius.circular(8)),
                       ),
                     ),
-                    const SizedBox(height: 10),
 
-                    // อีเมล
-                    const Text("อีเมลผู้แจ้ง"),
+                    const SizedBox(height: 10),
+                    const Text("รายละเอียดปัญหา"),
                     TextField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
+                      controller: _detailController,
+                      maxLines: 3,
                       decoration: InputDecoration(
-                        hintText: "เช่น abc@gmail.com",
+                        hintText: "กรุณาพิมพ์รายละเอียดที่ต้องการ",
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8)),
                       ),
                     ),
                     const SizedBox(height: 10),
+
+                    // อีเมล
+                    // const Text("อีเมลผู้แจ้ง"),
+                    // TextField(
+                    //   controller: _emailController,
+                    //   keyboardType: TextInputType.emailAddress,
+                    //   decoration: InputDecoration(
+                    //     hintText: "เช่น abc@gmail.com",
+                    //     border: OutlineInputBorder(
+                    //         borderRadius: BorderRadius.circular(8)),
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 10),
 
                     // แนบรูปภาพ
                     // แนบรูปภาพ
@@ -264,46 +197,46 @@ class _ReportFormPageState extends State<ReportFormPage> {
                     const SizedBox(height: 10),
 
                     // แผนที่ Google Map
-                    const Text("สถานที่เกิดปัญหา (คลิกแผนที่เพื่อเลือก)"),
-                    SizedBox(
-                      height: 300,
-                      child: GoogleMap(
-                        onMapCreated: _onMapCreated,
-                        initialCameraPosition:
-                            CameraPosition(target: _center, zoom: 15),
-                        markers: {
-                          Marker(
-                              markerId: const MarkerId("selectedLocation"),
-                              position: _center),
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 10),
+                    // const Text("สถานที่เกิดปัญหา (คลิกแผนที่เพื่อเลือก)"),
+                    // SizedBox(
+                    //   height: 300,
+                    //   child: GoogleMap(
+                    //     onMapCreated: _onMapCreated,
+                    //     initialCameraPosition:
+                    //         CameraPosition(target: _center, zoom: 15),
+                    //     markers: {
+                    //       Marker(
+                    //           markerId: const MarkerId("selectedLocation"),
+                    //           position: _center),
+                    //     },
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 10),
 
                     // 🔥 เลือกความเร่งด่วน
-                    const Text("ระดับความเร่งด่วน"),
-                    DropdownButtonFormField<String>(
-                      value: _selectedUrgency,
-                      items: [
-                        "ภายใน 3 วัน",
-                        "ภายใน 7 วัน",
-                        "ภายใน 14 วัน",
-                        "ไม่เร่งด่วน"
-                      ].map((String urgency) {
-                        return DropdownMenuItem(
-                            value: urgency, child: Text(urgency));
-                      }).toList(),
-                      onChanged: (newValue) {
-                        setState(() {
-                          _selectedUrgency = newValue!;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
+                    // const Text("ระดับความเร่งด่วน"),
+                    // DropdownButtonFormField<String>(
+                    //   value: _selectedUrgency,
+                    //   items: [
+                    //     "ภายใน 3 วัน",
+                    //     "ภายใน 7 วัน",
+                    //     "ภายใน 14 วัน",
+                    //     "ไม่เร่งด่วน"
+                    //   ].map((String urgency) {
+                    //     return DropdownMenuItem(
+                    //         value: urgency, child: Text(urgency));
+                    //   }).toList(),
+                    //   onChanged: (newValue) {
+                    //     setState(() {
+                    //       _selectedUrgency = newValue!;
+                    //     });
+                    //   },
+                    //   decoration: InputDecoration(
+                    //     border: OutlineInputBorder(
+                    //         borderRadius: BorderRadius.circular(8)),
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 20),
 
                     // ปุ่มส่งข้อมูล
                     Center(
@@ -314,7 +247,7 @@ class _ReportFormPageState extends State<ReportFormPage> {
                               horizontal: 40, vertical: 15),
                         ),
                         onPressed: () {
-                          sendPost();
+                          _submitForm();
                         },
                         child: const Text("ส่งข้อมูล",
                             style: TextStyle(color: Colors.white)),
@@ -330,22 +263,23 @@ class _ReportFormPageState extends State<ReportFormPage> {
     );
   }
 
-  // void _submitForm() {
-  //   String details = _detailController.text;
-  //   String name = _nameController.text;
-  //   String email = _emailController.text;
+  void _submitForm() {
+    String details = _detailController.text;
+    String name = _nameController.text;
+    // String email = _emailController.text;
 
-  //   if (details.isEmpty || name.isEmpty || email.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text("กรุณากรอกข้อมูลให้ครบถ้วน")),
-  //     );
-  //     return;
-  //   }
+    if (details.isEmpty || name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("กรุณากรอกข้อมูลให้ครบถ้วน")),
+      );
+      return;
+    }
 
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     const SnackBar(content: Text("ส่งข้อมูลสำเร็จ!")),
-  //   );
-  //   // กลับไปหน้าหลัก
-  //   Navigator.pop(context);
-  // }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("ส่งข้อมูลสำเร็จ!")),
+    );
+
+    // กลับไปหน้าหลัก
+    Navigator.pop(context);
+  }
 }
