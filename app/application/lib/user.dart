@@ -1,36 +1,17 @@
 import 'dart:convert';
-import 'package:application/admin.dart';
+// import 'package:application/admin.dart';
+// import 'package:application/urgency.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'reportDetailPageEP.dart';
+import 'main.dart';
 
-import 'loginPage.dart';
-import 'reportDetailPage.dart';
-import 'reportFormPage.dart';
-
-//
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
+class userPage extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: HomePage(),
-    );
-  }
+  _userPageState createState() => _userPageState();
 }
 
-// 🏠 หน้าหลัก (StatefulWidget)
-class HomePage extends StatefulWidget {
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
+class _userPageState extends State<userPage> {
   List<Map<String, dynamic>> reportsFromApi = [];
   String selectedStatus = 'ทั้งหมด';
 
@@ -57,8 +38,7 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
-
-List<Map<String, dynamic>> getFilteredReports() {
+  List<Map<String, dynamic>> getFilteredReports() {
     if (selectedStatus == 'ทั้งหมด') {
       return reportsFromApi;
     } else {
@@ -67,6 +47,7 @@ List<Map<String, dynamic>> getFilteredReports() {
           .toList();
     }
   }
+
 
   @override
   void initState() {
@@ -79,7 +60,7 @@ List<Map<String, dynamic>> getFilteredReports() {
     return Scaffold(
       backgroundColor: Colors.green[100],
       appBar: AppBar(
-        title: Text("หน้าหลัก"),
+        title: Text("พนักงาน"),
         backgroundColor: Colors.green[300],
         actions: [
           IconButton(
@@ -97,14 +78,6 @@ List<Map<String, dynamic>> getFilteredReports() {
                   style: TextStyle(color: Colors.white, fontSize: 24)),
             ),
             ListTile(
-                title: Text("แจ้งปัญหา"),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ReportFormPage()),
-                  );
-                }),
-            ListTile(
                 title: Text("หน้าหลัก"),
                 onTap: () {
                   Navigator.push(
@@ -112,22 +85,14 @@ List<Map<String, dynamic>> getFilteredReports() {
                     MaterialPageRoute(builder: (context) => HomePage()),
                   );
                 }),
-            ListTile(
-                title: Text("สำหรับหน่วยงาน"),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => LoginPage()),
-                  );
-                }),
-            ListTile(
-                title: Text("Admin"),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AdminPage()),
-                  );
-                }),
+            // ListTile(
+            //     title: Text("หน่วยงาน"),
+            //     onTap: () {
+            //       Navigator.push(
+            //         context,
+            //         MaterialPageRoute(builder: (context) => UrgencyPage()),
+            //       );
+            //     }),
             ListTile(
               title: Text("โหลดข้อมูลใหม่"),
               onTap: () {
@@ -139,7 +104,7 @@ List<Map<String, dynamic>> getFilteredReports() {
       ),
       body: Column(
         children: [
-           Padding(
+          Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -181,7 +146,7 @@ List<Map<String, dynamic>> getFilteredReports() {
                           mainAxisSpacing: 10,
                           childAspectRatio: 1,
                         ),
-                        itemCount: getFilteredReports().length,
+                       itemCount: getFilteredReports().length,
                         itemBuilder: (context, index) {
                           final report = getFilteredReports()[index];
                           return GestureDetector(
@@ -189,7 +154,7 @@ List<Map<String, dynamic>> getFilteredReports() {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => ReportDetailPage(
+                                  builder: (context) => ReportDetailPageEP(
                                     reportId: report["id"],
                                   ),
                                 ),
@@ -282,29 +247,29 @@ List<Map<String, dynamic>> getFilteredReports() {
               },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.yellow[700],
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ReportFormPage()),
-                );
-              },
-              icon: const Icon(Icons.warning, color: Colors.black),
-              label: const Text("แจ้งปัญหา",
-                  style: TextStyle(
-                      color: Colors.black, fontWeight: FontWeight.bold)),
-            ),
-          ),
+          // Padding(
+          //   padding: const EdgeInsets.all(16.0),
+          //   child: ElevatedButton.icon(
+          //     style: ElevatedButton.styleFrom(
+          //       backgroundColor: Colors.yellow[700],
+          //       padding:
+          //           const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          //       shape: RoundedRectangleBorder(
+          //         borderRadius: BorderRadius.circular(20),
+          //       ),
+          //     ),
+          //     onPressed: () {
+          //       Navigator.push(
+          //         context,
+          //         MaterialPageRoute(builder: (context) => ReportFormPage()),
+          //       );
+          //     },
+          //     icon: const Icon(Icons.warning, color: Colors.black),
+          //     label: const Text("แจ้งปัญหา",
+          //         style: TextStyle(
+          //             color: Colors.black, fontWeight: FontWeight.bold)),
+          //   ),
+          // ),
         ],
       ),
     );
