@@ -29,7 +29,7 @@ class _RegisterPageScreen extends State<RegisterPageScreen> {
   bool isPasswordVisible = false;
   bool isLoading = false; // ✅ ตัวแปรควบคุมสถานะโหลด
 
-  // ฟังก์ชันล็อกอิน
+  // ฟังก์ชันล็อกอินeq
   void Register() {
     if (_formKey.currentState!.validate()) {
       setState(() {
