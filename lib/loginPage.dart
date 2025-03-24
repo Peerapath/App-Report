@@ -33,6 +33,16 @@ class _LoginScreenState extends State<LoginScreen> {
   // ฟังก์ชันล็อกอิน
   void login() {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        isLoading = true;
+      });
+
+      Future.delayed(Duration(seconds: 3), () {
+        setState(() {
+          isLoading = false;
+        });
+
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("เข้าสู่ระบบสำเร็จ!")),
       );
@@ -40,6 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
         context,
         MaterialPageRoute(builder: (contex) => userPage()),
       );
+      });
     }
   }
 
@@ -148,8 +159,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           height: 20,
                         ),
 
-                        Center(
-                            child: ElevatedButton(
+                        Center( 
+                          child: isLoading
+                          ? SpinKitCircle(
+                            color: Colors.green,
+                            size: 50.0,
+                          )
+                          : ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
                             padding: const EdgeInsets.symmetric(
