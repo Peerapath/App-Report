@@ -1,99 +1,190 @@
-import 'package:application/admin.dart';
 import 'package:flutter/material.dart';
-
+import 'package:form_field_validator/form_field_validator.dart';
+import 'employee.dart';
 import 'registerPage.dart';
-import 'user.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-// 🔓 เข้าสู่ระบบ
-class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: LoginScreen(),
+    );
+  }
+}
+
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  bool isPasswordVisible = false;
+  bool isLoading = false;
+
+  // ฟังก์ชันล็อกอิน
+  void login() {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        isLoading = true;
+      });
+
+      Future.delayed(Duration(seconds: 3), () {
+        setState(() {
+          isLoading = false;
+        });
+
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("เข้าสู่ระบบสำเร็จ!")),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (contex) => userPage()),
+      );
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[100], // พื้นหลังนอกฟอร์ม
-      appBar: AppBar(
-        title: const Text("เข้าสู่ระบบ"),
-        backgroundColor: Colors.green[300],
-      ),
-      body: Center(
-        // จัดให้อยู่ตรงกลาง
-        child: ConstrainedBox(
-          constraints:
-              const BoxConstraints(maxWidth: 500), // จำกัดกว้างสุด 700px
-          child: Card(
-            // ใช้ Card เพื่อเพิ่มเงา และพื้นหลัง
-            color: Colors.white, // พื้นหลังฟอร์ม
-            elevation: 5, // เพิ่มเงา
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("อีเมล"),
-                    TextField(
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        hintText: "กรอกอีเมลของคุณ",
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text("รหัสผ่าน"),
-                    TextField(
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        hintText: "กรอกรหัสผ่าน",
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Center(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 40, vertical: 15),
+        backgroundColor: Colors.green[100],
+        appBar: AppBar(
+          title: null,
+          backgroundColor: Colors.green[300],
+        ),
+        body: Center(
+          child: ConstrainedBox(
+            constraints:
+                const BoxConstraints(maxWidth: 500), // จำกัดกว้างสุด 700px
+            child: Card(
+              // ใช้ Card เพื่อเพิ่มเงา และพื้นหลัง
+              color: Colors.white, // พื้นหลังฟอร์ม
+              elevation: 5, // เพิ่มเงา
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // SpinKitRotatingCircle(
+                        //     color: Colors.white,
+                        //     size: 50.0,
+                        // ),
+                        const SizedBox(height: 30),
+                        const Text(
+                          "เข้าสู่ระบบ",
+                          style: TextStyle(fontSize: 30, color: Colors.black),
                         ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => userPage()),
-                          );
-                          // เชื่อมต่อระบบล็อกอินที่นี่
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("เข้าสู่ระบบสำเร็จ!")),
-                          );
-                        },
-                        child: const Text("เข้าสู่ระบบ",
-                            style: TextStyle(color: Colors.white)),
-                      ),
+
+                        const SizedBox(
+                          height: 30,
+                        ),
+
+                        TextFormField(
+                          controller: emailController,
+                          decoration: InputDecoration(
+                            labelText: "อีเมล",
+                            hintText: "กรอกอีเมลของคุณ",
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8)),
+                          ),
+                          validator: MultiValidator([
+                            RequiredValidator(errorText: 'กรุณากรอกอีเมล'),
+                            EmailValidator(errorText: 'รูปแบบอีเมลไม่ถูกต้อง'),
+                          ]),
+                        ),
+
+                        const SizedBox(height: 10),
+                        // const Text('รหัสผ่าน'),
+
+                        TextFormField(
+                          controller: passwordController,
+                          obscureText: !isPasswordVisible,
+                          decoration: InputDecoration(
+                            labelText: "รหัสผ่าน",
+                            hintText: "กรอกรหัสผ่าน",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                isPasswordVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  isPasswordVisible = !isPasswordVisible;
+                                });
+                              },
+                            ),
+                          ),
+                          validator: MultiValidator([
+                            RequiredValidator(errorText: 'กรุณากรอกรหัสผ่าน'),
+                            MinLengthValidator(6,
+                                errorText:
+                                    'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'),
+                          ]),
+                        ),
+
+                        const SizedBox(height: 5),
+
+                        Center(
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => RegisterPageScreen()),
+                              );
+                            },
+                            child: const Text("ยังไม่มีบัญชี? สมัครสมาชิก"),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+
+                        Center( 
+                          child: isLoading
+                          ? SpinKitCircle(
+                            color: Colors.green,
+                            size: 50.0,
+                          )
+                          : ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 40, vertical: 15),
+                          ),
+                          onPressed: login,
+                          child: const Text(
+                            "ตกลง",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        )),
+                        const SizedBox(height: 10),
+                      ],
                     ),
-                    const SizedBox(height: 10),
-                    Center(
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const RegisterPage()),
-                          );
-                        },
-                        child: const Text("ยังไม่มีบัญชี? สมัครสมาชิก"),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 }

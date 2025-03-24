@@ -7,7 +7,6 @@ import 'loginPage.dart';
 import 'reportDetailPage.dart';
 import 'reportFormPage.dart';
 
-//
 void main() {
   runApp(MyApp());
 }
@@ -117,7 +116,7 @@ List<Map<String, dynamic>> getFilteredReports() {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => LoginPage()),
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
                   );
                 }),
             ListTile(
