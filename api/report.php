@@ -292,7 +292,6 @@ class API {
 // Instantiate the API class and process the request
 $API = new API();
 
-// ดึงค่า ID จาก URL (รองรับ PATH_INFO)
 $id = null;
 if (isset($_SERVER['PATH_INFO'])) {
     $path_parts = explode('/', trim($_SERVER['PATH_INFO'], '/'));
