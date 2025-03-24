@@ -4,8 +4,6 @@ import 'user.dart';
 import 'registerPage.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-
-
 void main() {
   runApp(MyApp());
 }
@@ -15,7 +13,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-
       home: LoginScreen(),
     );
   }
@@ -31,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isPasswordVisible = false;
+  bool isLoading = false;
 
   // ฟังก์ชันล็อกอิน
   void login() {
@@ -91,8 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             labelText: "อีเมล",
                             hintText: "กรอกอีเมลของคุณ",
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8)
-                            ),
+                                borderRadius: BorderRadius.circular(8)),
                           ),
                           validator: MultiValidator([
                             RequiredValidator(errorText: 'กรุณากรอกอีเมล'),
@@ -135,22 +132,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 5),
 
-                         Center(
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => RegisterPageScreen()),
-                          );
-                        },
-                        child: const Text("ยังไม่มีบัญชี? สมัครสมาชิก"),
-                      ),
-                    ),
-                    const SizedBox(height: 20,),
+                        Center(
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => RegisterPageScreen()),
+                              );
+                            },
+                            child: const Text("ยังไม่มีบัญชี? สมัครสมาชิก"),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
 
                         Center(
-                          child: ElevatedButton(
+                            child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
                             padding: const EdgeInsets.symmetric(
@@ -162,8 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: TextStyle(color: Colors.white),
                           ),
                         )),
-                         const SizedBox(height: 10),
-                   
+                        const SizedBox(height: 10),
                       ],
                     ),
                   ),
