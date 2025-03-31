@@ -60,20 +60,6 @@ http://26.21.85.254:8080/Reportig/api/report.php
 }
 ```
 
-:white_check_mark: **Response (หากเพิ่มสำเร็จ):**
-```json
-{
-    "success": "Record added successfully"
-}
-```
-
-:x: **Response (หากมีข้อผิดพลาด):**
-```json
-{
-    "error": "Invalid input data"
-}
-```
-
 ---
 
 ### 3️⃣ ทดสอบ `report.php` (แก้ไขรายงาน)
@@ -95,20 +81,6 @@ http://26.21.85.254:8080/Reportig/api/report.php?id=1
     "f_name": "สมชาย",
     "l_name": "ใจดี",
     "email": "somchai@example.com"
-}
-```
-
-:white_check_mark: **Response (หากแก้ไขสำเร็จ):**
-```json
-{
-    "success": "Record updated successfully"
-}
-```
-
-:x: **Response (หากไม่มีข้อมูลหรือไม่ได้เปลี่ยนแปลง):**
-```json
-{
-    "error": "No record found or no change made"
 }
 ```
 
@@ -189,6 +161,61 @@ http://26.21.85.254:8080/Reportig/api/login.php
 ```json
 {
     "error": "Invalid username or password"
+}
+```
+
+---
+
+### 6️⃣ ทดสอบ `image_api.php` (อัปโหลด/อัปเดต/ดึงรูปภาพ)
+
+**:small_blue_diamond: POST Request (อัปโหลดรูปภาพ):**  
+```
+http://localhost:8080/Reportig/api/image_api.php
+```
+
+**:small_blue_diamond: Body (Form-Data):**
+- `image`: (ไฟล์รูปภาพ)
+
+:white_check_mark: **Response (สำเร็จ):**
+```json
+{
+    "success": "Image uploaded successfully",
+    "id": 1
+}
+```
+
+---
+
+**:small_blue_diamond: PUT Request (อัปเดตรูปภาพ):**  
+```
+http://localhost:8080/Reportig/api/image_api.php?id=1
+```
+
+**:small_blue_diamond: Body (Form-Data):**
+- `image`: (ไฟล์รูปภาพใหม่)
+
+:white_check_mark: **Response (สำเร็จ):**
+```json
+{
+    "success": "Image updated successfully",
+    "id": "1"
+}
+```
+
+---
+
+**:small_blue_diamond: GET Request (ดึงรูปภาพ):**  
+```
+http://localhost:8080/Reportig/api/image_api.php?id=1
+```
+
+:white_check_mark: **Response (หากพบรูปภาพ):**
+- แสดงรูปภาพโดยตรง
+
+:x: **Response (หากไม่พบรูปภาพ):**
+```json
+{
+    "error": "Image not found"
 }
 ```
 
