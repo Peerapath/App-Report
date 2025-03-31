@@ -60,6 +60,20 @@ http://26.21.85.254:8080/Reportig/api/report.php
 }
 ```
 
+:white_check_mark: **Response (หากเพิ่มสำเร็จ):**
+```json
+{
+    "success": "Record added successfully"
+}
+```
+
+:x: **Response (หากมีข้อผิดพลาด):**
+```json
+{
+    "error": "Invalid input data"
+}
+```
+
 ---
 
 ### 3️⃣ ทดสอบ `report.php` (แก้ไขรายงาน)
@@ -81,6 +95,20 @@ http://26.21.85.254:8080/Reportig/api/report.php?id=1
     "f_name": "สมชาย",
     "l_name": "ใจดี",
     "email": "somchai@example.com"
+}
+```
+
+:white_check_mark: **Response (หากแก้ไขสำเร็จ):**
+```json
+{
+    "success": "Record updated successfully"
+}
+```
+
+:x: **Response (หากไม่มีข้อมูลหรือไม่ได้เปลี่ยนแปลง):**
+```json
+{
+    "error": "No record found or no change made"
 }
 ```
 
