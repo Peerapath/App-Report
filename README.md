@@ -40,7 +40,7 @@ http://26.21.85.254:8080/Reportig/api/report.php?id=1
             "task_id": 2,
             "task_date_time": "2025-02-10 18:36:16",
             "task_description": "เพิ่มงานใหม่-2",
-            "task_status": "ส่งต่อ",
+            "task_status": "ดำเนินงาน",
             "department": "บริหารทั่วไป",
             "employees_id": 3,
             "task_image_url": [
