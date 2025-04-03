@@ -133,7 +133,7 @@ http://26.21.85.254:8080/Reportig/api/task.php?id=1
 http://26.21.85.254:8080/Reportig/api/task.php
 ```
 
-**:small_blue_diamond: Body (JSON):**
+**:small_blue_diamond: Form Data:**
 ```Form Data:
 report_id: 1
 department_id: 2
