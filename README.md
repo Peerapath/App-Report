@@ -13,29 +13,42 @@ http://26.21.85.254:8080/Reportig/api/report.php?id=1
 
 **:small_blue_diamond: Response (JSON):**
 ```json
-[
-    {
+{
     "report_id": 1,
-    "employees_id": 2,
+    "employees_id": 3,
     "report_description": "อัพเดท4",
     "location": "ถนนสุขุมวิท 101",
     "date_time": "2024-02-07 14:30:00",
     "problem_type": "สะพาน",
     "report_status": "ส่งต่อ",
-    "report_image": ["http://26.21.85.254:8080/Reportig/api/image_api.php?id=3"],
-        "tasks": [
+    "report_image_url": [
+        "http://26.21.85.254:8080/Reportig/api/image_api.php?id=3"
+    ],
+    "tasks": [
         {
             "task_id": 1,
             "task_date_time": "2024-12-24 18:46:13",
             "task_description": "ทดสอบระบบงาน",
             "task_status": "รอรับเรื่อง",
             "department": "บริหารทั่วไป",
-            "employees_id": 1,
-            "task_image_url": ["http://26.21.85.254:8080/Reportig/api/image_api.php?id=4"]
+            "employees_id": 3,
+            "task_image_url": [
+                "http://26.21.85.254:8080/Reportig/api/image_api.php?id=4"
+            ]
+        },
+        {
+            "task_id": 2,
+            "task_date_time": "2025-02-10 18:36:16",
+            "task_description": "เพิ่มงานใหม่-2",
+            "task_status": "ส่งต่อ",
+            "department": "บริหารทั่วไป",
+            "employees_id": 3,
+            "task_image_url": [
+                "http://26.21.85.254:8080/Reportig/api/image_api.php?id=8"
+            ]
         }
-        ]
-    }
-]
+    ]
+}
 ```
 ---
 
