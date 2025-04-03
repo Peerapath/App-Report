@@ -57,7 +57,8 @@ http://26.21.85.254:8080/Reportig/api/report.php
     "status_id": 1,
     "f_name": "สมชาย",
     "l_name": "ใจดี",
-    "email": "somchai@example.com"
+    "email": "somchai@example.com",
+    "report_image_url": [],
 }
 ```
 
