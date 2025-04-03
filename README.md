@@ -156,6 +156,29 @@ image: (Upload file)
 
 ---
 
+###  ทดสอบ `employee_get_task.php` (รับงาน)
+
+**:small_blue_diamond: POST Request:**  
+```
+http://26.21.85.254:8080/Reportig/api/employee_get_task.php
+```
+
+**:small_blue_diamond: Response (JSON):**
+```json
+{
+    "task_id": 1,
+    "employees_id": 3,
+}
+```
+:white_check_mark: **Response (หากเพิ่มงานสำเร็จ):**
+```json
+{
+
+}
+```
+
+---
+
 ###  ทดสอบ `task.php` (แก้ไขงาน)
 
 **:small_blue_diamond: PUT Request:**  
