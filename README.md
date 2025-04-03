@@ -22,7 +22,7 @@ http://26.21.85.254:8080/Reportig/api/report.php?id=1
     "date_time": "2024-02-07 14:30:00",
     "problem_type": "สะพาน",
     "report_status": "ส่งต่อ",
-    "report_image_url": ["http://26.21.85.254:8080/Reportig/api/image_api.php?id=3"],
+    "report_image": ["http://26.21.85.254:8080/Reportig/api/image_api.php?id=3"],
         "tasks": [
         {
             "task_id": 1,
