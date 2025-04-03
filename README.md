@@ -168,12 +168,14 @@ http://26.21.85.254:8080/Reportig/api/employee_get_task.php
 {
     "task_id": 1,
     "employees_id": 3,
+	"status_id": 2
 }
 ```
 :white_check_mark: **Response (หากเพิ่มงานสำเร็จ):**
 ```json
 {
-
+    "message": "Task copied successfully",
+    "new_task_id": 12
 }
 ```
 
