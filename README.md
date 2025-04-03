@@ -4,7 +4,7 @@
 
 ---
 
-### 1️⃣ ทดสอบ `report.php` (ดึงรายงานทั้งหมด หรือระบุ ID)
+###  ทดสอบ `report.php` (ดึงรายงานทั้งหมด หรือระบุ ID)
 
 **:small_blue_diamond: GET Request:**  
 ```
@@ -52,7 +52,7 @@ http://26.21.85.254:8080/Reportig/api/report.php?id=1
 ```
 ---
 
-### 2️⃣ ทดสอบ `report.php` (เพิ่มรายงานใหม่)
+###  ทดสอบ `report.php` (เพิ่มรายงานใหม่)
 
 **:small_blue_diamond: POST Request:**  
 ```
@@ -77,7 +77,7 @@ http://26.21.85.254:8080/Reportig/api/report.php
 
 ---
 
-### 3️⃣ ทดสอบ `report.php` (แก้ไขรายงาน)
+###  ทดสอบ `report.php` (แก้ไขรายงาน)
 
 **:small_blue_diamond: PUT Request:**  
 ```
@@ -100,8 +100,82 @@ http://26.21.85.254:8080/Reportig/api/report.php?id=1
 ```
 
 ---
+###  ทดสอบ `task.php` (ดึงงานทั้งหมด หรือระบุ ID)
 
-### 4️⃣ ทดสอบ `register.php` (สมัครสมาชิก)
+**:small_blue_diamond: GET Request:**  
+```
+http://26.21.85.254:8080/Reportig/api/task.php?id=1
+```
+
+**:small_blue_diamond: Response (JSON):**
+```json
+{
+    "task_id": 1,
+    "task_date_time": "2024-12-24 18:46:13",
+    "task_description": "ทดสอบระบบงาน",
+    "task_status": "รอรับเรื่อง",
+    "department": "บริหารทั่วไป",
+    "employees_id": 3,
+    "task_image_url": [
+        "http://26.21.85.254:8080/Reportig/api/image_api.php?id=4"
+    ]
+}
+```
+---
+
+###  ทดสอบ `report.php` (เพิ่มงานใหม่)
+
+**:small_blue_diamond: POST Request:**  
+```
+http://26.21.85.254:8080/Reportig/api/task.php
+```
+
+**:small_blue_diamond: Body (JSON):**
+```Form Data:
+report_id: 1
+department_id: 2
+employee_id: 3
+task_description: "Check network connectivity"
+date_time: "2025-04-04 14:00:00"
+status_id: 1
+image: (Upload file)
+```
+:white_check_mark: **Response (หากเพิ่มงานสำเร็จ):**
+```json
+{
+  "message": "Task created successfully",
+  "task_id": 10,
+  "images": [
+    "http://localhost/Reportig/api/image_api.php?id=1"
+  ]
+}
+```
+---
+###  ทดสอบ `report.php` (แก้ไขงาน)
+
+**:small_blue_diamond: PUT Request:**  
+```
+http://26.21.85.254:8080/Reportig/api/task.php?id=1
+```
+
+**:small_blue_diamond: Body (JSON):**
+```json
+{
+  "id": 10,
+  "task_description": "Network issue resolved",
+  "status_id": 2
+}
+```
+:white_check_mark: **Response (แก้ไขงานสำเร็จ):**
+```json
+{
+  "message": "Task updated successfully"
+}
+```
+
+---
+
+###  ทดสอบ `register.php` (สมัครสมาชิก)
 
 **:small_blue_diamond: POST Request:**  
 ```
@@ -138,7 +212,7 @@ http://26.21.85.254:8080/Reportig/api/register.php
 
 ---
 
-### 5️⃣ ทดสอบ `login.php` (เข้าสู่ระบบ)
+###  ทดสอบ `login.php` (เข้าสู่ระบบ)
 
 **:small_blue_diamond: POST Request:**  
 ```
@@ -181,7 +255,7 @@ http://26.21.85.254:8080/Reportig/api/login.php
 
 ---
 
-### 6️⃣ ทดสอบ `image_api.php` (อัปโหลด/อัปเดต/ดึงรูปภาพ)
+###  ทดสอบ `image_api.php` (อัปโหลด/อัปเดต/ดึงรูปภาพ)
 
 **:small_blue_diamond: POST Request (อัปโหลดรูปภาพ):**  
 ```
