@@ -163,7 +163,7 @@ image: (Upload file)
 http://26.21.85.254:8080/Reportig/api/employee_get_task.php
 ```
 
-**:small_blue_diamond: Response (JSON):**
+**:small_blue_diamond: Body (JSON):**
 ```json
 {
     "task_id": 1,
