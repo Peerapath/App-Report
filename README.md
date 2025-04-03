@@ -100,6 +100,8 @@ http://26.21.85.254:8080/Reportig/api/report.php?id=1
 ```
 
 ---
+```
+```
 ###  ทดสอบ `task.php` (ดึงงานทั้งหมด หรือระบุ ID)
 
 **:small_blue_diamond: GET Request:**  
@@ -121,9 +123,10 @@ http://26.21.85.254:8080/Reportig/api/task.php?id=1
     ]
 }
 ```
+
 ---
 
-###  ทดสอบ `report.php` (เพิ่มงานใหม่)
+###  ทดสอบ `task.php` (เพิ่มงานใหม่)
 
 **:small_blue_diamond: POST Request:**  
 ```
@@ -150,8 +153,10 @@ image: (Upload file)
   ]
 }
 ```
+
 ---
-###  ทดสอบ `report.php` (แก้ไขงาน)
+
+###  ทดสอบ `task.php` (แก้ไขงาน)
 
 **:small_blue_diamond: PUT Request:**  
 ```
@@ -174,7 +179,8 @@ http://26.21.85.254:8080/Reportig/api/task.php?id=1
 ```
 
 ---
-
+```
+```
 ###  ทดสอบ `register.php` (สมัครสมาชิก)
 
 **:small_blue_diamond: POST Request:**  
@@ -211,7 +217,8 @@ http://26.21.85.254:8080/Reportig/api/register.php
 ```
 
 ---
-
+```
+```
 ###  ทดสอบ `login.php` (เข้าสู่ระบบ)
 
 **:small_blue_diamond: POST Request:**  
@@ -254,7 +261,8 @@ http://26.21.85.254:8080/Reportig/api/login.php
 ```
 
 ---
-
+```
+```
 ###  ทดสอบ `image_api.php` (อัปโหลด/อัปเดต/ดึงรูปภาพ)
 
 **:small_blue_diamond: POST Request (อัปโหลดรูปภาพ):**  
