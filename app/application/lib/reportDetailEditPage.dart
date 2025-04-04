@@ -2,26 +2,64 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:form_field_validator/form_field_validator.dart';
 
 class ReportDetailEditPage extends StatefulWidget {
-  final Map<String, dynamic> report;
+  final reportId;
 
-  const ReportDetailEditPage({super.key, required this.report});
+  const ReportDetailEditPage({super.key, required this.reportId});
 
   @override
   _ReportDetailEditPageState createState() => _ReportDetailEditPageState();
 }
 
 class _ReportDetailEditPageState extends State<ReportDetailEditPage> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _complaintController = TextEditingController();
   final TextEditingController _solutionController = TextEditingController();
   String _selectedStatus = "รอรับเรื่อง";
   String _selectedDepartment = "หน่วยงาน A";
   File? _beforeImage;
   File? _afterImage;
+  bool isLoading = true;
 
   final List<String> statuses = ["รอรับเรื่อง", "กำลังดำเนินการ", "เสร็จสิ้น"];
   final List<String> departments = ["หน่วยงาน A", "หน่วยงาน B", "หน่วยงาน C"];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchReportData();
+  }
+
+  Future<void> fetchReportData() async {
+    final url = Uri.parse(
+        "http://26.21.85.254:8080/Reportig/api/report.php?id=${widget.reportId}");
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      if (data.isNotEmpty) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void validatorsent() async {
+    if (_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("ส่งข้อมูลสำเร็จ!")),
+      );
+    }
+  }
 
   Future<void> _pickImage(bool isBefore) async {
     final pickedFile =
@@ -88,6 +126,8 @@ class _ReportDetailEditPageState extends State<ReportDetailEditPage> {
                         _selectedDepartment = value!;
                       });
                     }),
+                    const SizedBox(height: 20),
+                    _buildTimeline(),
                     const SizedBox(height: 20),
                     _buildLocationMap(),
                     const SizedBox(height: 20),
@@ -165,12 +205,14 @@ class _ReportDetailEditPageState extends State<ReportDetailEditPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: TextStyle(fontWeight: FontWeight.bold)),
-        TextField(
+        TextFormField(
           controller: controller,
           decoration: InputDecoration(
             border: OutlineInputBorder(),
             hintText: "ป้อน $label",
           ),
+          validator: MultiValidator(
+              [RequiredValidator(errorText: "กรุณากรอก${label}")]),
           maxLines: 3,
         ),
       ],
@@ -186,21 +228,61 @@ class _ReportDetailEditPageState extends State<ReportDetailEditPage> {
         Container(
           height: 300,
           decoration: BoxDecoration(border: Border.all(color: Colors.green)),
-          child: GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: LatLng(widget.report['latitude'] ?? 13.7563,
-                  widget.report['longitude'] ?? 100.5018),
-              zoom: 14,
-            ),
-            markers: {
-              Marker(
-                markerId: MarkerId("report_location"),
-                position: LatLng(widget.report['latitude'] ?? 13.7563,
-                    widget.report['longitude'] ?? 100.5018),
-              ),
-            },
-          ),
+          // child: GoogleMap(
+          //   initialCameraPosition: CameraPosition(
+          //     target: LatLng(widget.report['latitude'] ?? 13.7563,
+          //         widget.report['longitude'] ?? 100.5018),
+          //     zoom: 14,
+          //   ),
+          //   markers: {
+          //     Marker(
+          //       markerId: MarkerId("report_location"),
+          //       position: LatLng(widget.report['latitude'] ?? 13.7563,
+          //           widget.report['longitude'] ?? 100.5018),
+          //     ),
+          //   },
+          // ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildTimeline() {
+    return Container(
+      padding: EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.green[50],
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("ไทม์ไลน์การดำเนินการ",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildTimelineStep(
+                  "รอรับเรื่อง", "15 ธ.ค. 67\n12:00 น.", Colors.red),
+              _buildTimelineStep(
+                  "กำลังดำเนินการ", "15 ธ.ค. 67\n14:00 น.", Colors.orange),
+              _buildTimelineStep(
+                  "เสร็จสิ้น", "15 ธ.ค. 67\n15:00 น.", Colors.green),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimelineStep(String title, String time, Color color) {
+    return Column(
+      children: [
+        Icon(Icons.circle, color: color, size: 20),
+        const SizedBox(height: 5),
+        Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+        Text(time, textAlign: TextAlign.center),
       ],
     );
   }

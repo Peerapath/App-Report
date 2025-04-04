@@ -3,24 +3,40 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'report.dart';
+import 'package:barcode_widget/barcode_widget.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:confetti/confetti.dart';
+import 'package:confetti/confetti.dart' as confetti_lib;
 
 class ReportDetailPage extends StatefulWidget {
   final int reportId;
 
-  const ReportDetailPage({super.key, required this.reportId});
+  const ReportDetailPage(
+      {super.key, required this.reportId});
 
   @override
   _ReportDetailPageState createState() => _ReportDetailPageState();
 }
 
 class _ReportDetailPageState extends State<ReportDetailPage> {
-  Map<String, dynamic>? report;
+  Report? report;
   bool isLoading = true;
+  double _rating = 0.0;
+  late ConfettiController _confettiController;
 
   @override
   void initState() {
     super.initState();
     fetchReportData();
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 2));
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
   }
 
   Future<void> fetchReportData() async {
@@ -29,13 +45,11 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      if (data.isNotEmpty) {
-        setState(() {
-          report = data[0];
-          isLoading = false;
-        });
-      }
+      final Map<String, dynamic> data = json.decode(response.body);
+      setState(() {
+        report = Report.fromJson(data);
+        isLoading = false;
+      });
     } else {
       setState(() {
         isLoading = false;
@@ -56,11 +70,10 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
               ? Center(child: Text("ไม่พบข้อมูล"))
               : Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                        maxWidth: 700), // จำกัดกว้างสุด 700px
+                    constraints: const BoxConstraints(maxWidth: 700),
                     child: Card(
-                      color: Colors.white, // พื้นหลังฟอร์ม
-                      elevation: 5, // เพิ่มเงา
+                      color: Colors.white,
+                      elevation: 5,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15)),
                       child: Padding(
@@ -69,47 +82,50 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  _buildImageBox(
-                                      "รูปภาพก่อนแจ้ง",
-                                      (report!["report_image_path"] != null &&
-                                              report!["report_image_path"]
-                                                  .isNotEmpty)
-                                          ? report!["report_image_path"][0]
-                                          : null),
-                                  const SizedBox(width: 20),
-                                  _buildImageBox(
-                                      "รูปภาพหลังแจ้ง",
-                                      (report!["tasks"] != null &&
-                                              report!["tasks"].isNotEmpty &&
-                                              report!["tasks"][0]
-                                                      ["task_image_path"] !=
-                                                  null &&
-                                              report!["tasks"][0]
-                                                      ["task_image_path"]
-                                                  .isNotEmpty)
-                                          ? report!["tasks"][0]
-                                              ["task_image_path"][0]
-                                          : null),
-                                ],
-                              ),
+                              _buildImageSection(),
                               const SizedBox(height: 20),
                               _buildStatusSection(),
                               const SizedBox(height: 20),
                               _buildDetailSection("รายละเอียดการร้องทุกข์",
-                                  report!["report_description"]),
+                                  report!.reportDescription),
                               _buildDetailSection(
-                                  "ประเภทปัญหา", report!["problem_type"]),
+                                  "ประเภทปัญหา", report!.problemType),
+                              _buildDetailSection("สถานที่", report!.location),
                               _buildDetailSection(
-                                  "สถานที่", report!["location"]),
-                              _buildDetailSection(
-                                  "วันที่แจ้ง", report!["date_time"]),
-                              const SizedBox(height: 20),
-                              _buildLocationMap(),
+                                  "วันที่แจ้ง", report!.dateTime.toString()),
                               const SizedBox(height: 20),
                               _buildTimeline(),
+                              const SizedBox(height: 10),
+                              if (report!.reportStatus == 'เสร็จสิ้น')
+                                _buildRatingSection(),
+                              const SizedBox(height: 10),
+                              _buildQRCodeSection(),
+                              confetti_lib.ConfettiWidget(
+                                confettiController: _confettiController,
+                                blastDirectionality: confetti_lib
+                                    .BlastDirectionality
+                                    .explosive, // กระจายทุกทิศทาง
+                                shouldLoop: false,
+                                maxBlastForce:
+                                    300, // ความแรงสูงสุดของการยิง confetti
+                                minBlastForce:
+                                    50, // ความแรงต่ำสุดของการยิง confetti
+                                numberOfParticles:
+                                    200, // จำนวนอนุภาคที่ปล่อยออกมา
+                                emissionFrequency:
+                                    0.02, // ความถี่ของการปล่อย confetti
+                                gravity:
+                                    0.5, // ค่าความเร่งแรงโน้มถ่วง (0.1 จะช้ากว่าค่าปกติ)
+                                particleDrag:
+                                    0.03, // ลดแรงเสียดทานให้ confetti ลอยนานขึ้น
+                                colors: [
+                                  Colors.red,
+                                  Colors.blue,
+                                  Colors.green,
+                                  Colors.yellow,
+                                  Colors.purple
+                                ], // สีของอนุภาค
+                              ),
                             ],
                           ),
                         ),
@@ -120,47 +136,140 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
     );
   }
 
-  Widget _buildImageBox(String title, String? imageUrl) {
+  Widget _buildImageSection() {
+    List<String> images = [];
+
+    if (report!.reportImageUrl.isNotEmpty &&
+        report!.reportImageUrl[0].isNotEmpty) {
+      images.add(report!.reportImageUrl[0]);
+    } else {
+      images.add("http://26.21.85.254:8080/Reportig/api/image_api.php?id=1");
+    }
+
+    if (report!.tasks.isNotEmpty &&
+        report!.tasks.last.taskImageUrl.isNotEmpty &&
+        report!.tasks.last.taskImageUrl[0].isNotEmpty) {
+      images.add(report!.tasks.last.taskImageUrl[0]);
+    } else {
+      images.add("http://26.21.85.254:8080/Reportig/api/image_api.php?id=1");
+    }
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
-        Container(
-          width: 150,
-          height: 150,
-          decoration: BoxDecoration(
-            color: Colors.green[100],
-            borderRadius: BorderRadius.circular(10),
-          ),
-          alignment: Alignment.center,
-          child: imageUrl != null
-              ? Image.network(imageUrl, fit: BoxFit.cover)
-              : Text("ไม่มีรูปภาพ"),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Container(
+              padding: EdgeInsets.all(5),
+              margin: EdgeInsets.symmetric(vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text("รูปภาพก่อนแจ้ง",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            Container(
+              padding: EdgeInsets.all(5),
+              margin: EdgeInsets.symmetric(vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text("รูปภาพหลังแจ้ง",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
         ),
+        SizedBox(height: 5),
+        if (images.isNotEmpty) _buildImageRow(images),
       ],
     );
   }
 
+  Widget _buildImageRow(List<String> imageUrls) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: imageUrls.map((imageUrl) {
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                height: MediaQuery.of(context).size.height *
+                    0.3, // Adjust image height based on screen size
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: Colors.green[100],
+                  child:
+                      Icon(Icons.broken_image, size: 50, color: Colors.green),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   Widget _buildStatusSection() {
+    Color statusColor;
+    switch (report!.reportStatus) {
+      case "เสร็จสิ้น":
+        statusColor = Colors.green;
+        break;
+      case "ดำเนินงาน":
+        statusColor = Colors.orange;
+        break;
+      case "รอรับเรื่อง":
+        statusColor = Colors.red;
+        break;
+      case "ส่งต่อ":
+        statusColor = Colors.blue;
+        break;
+      default:
+        statusColor = Colors.grey;
+    }
     return Container(
       padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.green[100],
+        color: Colors.green[50],
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("สถานะ: ${report!["report_status"]}",
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Colors.orange)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: CircleAvatar(
+              radius: 10,
+              backgroundColor: statusColor,
+            ),
+          ),
+          Text(report!.reportStatus,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         ],
       ),
     );
   }
 
   Widget _buildDetailSection(String title, String? details) {
+    String? formattedDate;
+    if (title == "วันที่แจ้ง" && details != null) {
+      // Format the date to "d/M/yyyy HH:mm:ss"
+      try {
+        DateTime dateTime = DateTime.parse(details);
+        formattedDate = DateFormat("d/M/yyyy HH:mm:ss").format(dateTime);
+      } catch (e) {
+        formattedDate = details; // Fallback to the original if parsing fails
+      }
+    } else {
+      formattedDate = details;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -173,7 +282,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
             color: Colors.grey[200],
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Text(details ?? "ไม่มีข้อมูล"),
+          child: Text(formattedDate ?? "ไม่มีข้อมูล"),
         ),
       ],
     );
@@ -186,91 +295,133 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
         color: Colors.green[50],
         borderRadius: BorderRadius.circular(10),
       ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 700), // จำกัดกว้างสุด 700px
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("ไทม์ไลน์การดำเนินการ",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 10),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                if (report!["tasks"] != null)
-                  ...report!["tasks"].map<Widget>((task) {
-                    // แปลงวันที่จาก String เป็น DateTime
-                    DateTime dateTime = DateTime.parse(task["task_date_time"]);
-
-                    // แปลงเป็นรูปแบบ ddMMyyyyHHmm
-                    String formattedDate =
-                        DateFormat("dd-MM-yyyy HH:mm").format(dateTime);
-
-                    Text(task["task_description"],
-                        style: TextStyle(fontWeight: FontWeight.bold));
-
-                    return _buildTimelineStep(
-                      task["task_status"],
-                      formattedDate, // ใช้วันที่ที่ฟอร์แมตแล้ว
-                      task['task_status'] == "รอรับเรื่อง"
-                          ? Colors.red
-                          : (task['task_status'] == "ส่งต่อ"
-                              ? Colors.lightBlue
-                              : (task['task_status'] == "ดำเนินงาน"
-                                  ? Colors.orangeAccent
-                                  : (task['task_status'] == "เสร็จสิ้น"
-                                      ? Colors.green
-                                      : Colors.grey))),
-                    );
-                  }).toList(),
-              ],
-            ),
-          ],
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("ไทม์ไลน์การดำเนินการ",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          Divider(color: Colors.purple),
+          const SizedBox(height: 10),
+          Column(
+            children:
+                report!.tasks.map((task) => _buildTimelineStep(task)).toList(),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTimelineStep(String title, String time, Color color) {
+  Widget _buildTimelineStep(Task task) {
+    Color statusColor;
+    switch (task.taskStatus) {
+      case "เสร็จสิ้น":
+        statusColor = Colors.green;
+        break;
+      case "ดำเนินงาน":
+        statusColor = Colors.orange;
+        break;
+      case "รอรับเรื่อง":
+        statusColor = Colors.red;
+        break;
+      case "ส่งต่อ":
+        statusColor = Colors.blue;
+        break;
+      default:
+        statusColor = Colors.grey;
+    }
+
     return Column(
       children: [
-        Icon(Icons.circle, color: color, size: 20),
-        const SizedBox(height: 5),
-        Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
-        Text(time, textAlign: TextAlign.center),
-        const SizedBox(height: 20),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: CircleAvatar(
+                radius: 10,
+                backgroundColor: statusColor,
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(task.taskStatus,
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(DateFormat("d/M/yyyy HH:mm:ss")
+                      .format(task.taskDateTime)),
+                  const SizedBox(height: 5),
+                  Text("หน่วยงานที่รับผิดชอบ: ${task.department}"),
+                  Text("รายละเอียดปัญหา: ${task.taskDescription}"),
+                ],
+              ),
+            ),
+          ],
+        ),
+        Divider(),
       ],
     );
   }
 
-  Widget _buildLocationMap() {
+  Widget _buildQRCodeSection() {
+    String qrData =
+        // "http://yourwebsite.com/report_detail?reportId=${widget.reportId}"
+        "https://github.com/Peerapath/App-Report";
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("สถานที่",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 10),
-        Container(
-          width: 300,
-          height: 300,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.green),
-          ),
-          child: GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: LatLng(report!['latitude'] ?? 13.7563,
-                  report!['longitude'] ?? 100.5018),
-              zoom: 14,
-            ),
-            markers: {
-              Marker(
-                markerId: MarkerId("report_location"),
-                position: LatLng(report!['latitude'] ?? 13.7563,
-                    report!['longitude'] ?? 100.5018),
-              ),
-            },
+        SizedBox(height: 20),
+        SizedBox(height: 10),
+        BarcodeWidget(
+          barcode: Barcode.qrCode(), // ใช้ QR Code
+          data: qrData,
+          width: 200,
+          height: 200,
+          drawText: false, // ไม่แสดงข้อความใต้ QR Code
+          errorBuilder: (context, error) => Container(
+            width: 200,
+            height: 200,
+            color: Colors.grey[300],
+            child: Icon(Icons.error, size: 50, color: Colors.red),
           ),
         ),
+        const SizedBox(
+          height: 10,
+        ),
+        Text(
+          "github.com/Peerapath/App-Report",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+
+  // เพิ่มฟังก์ชันการให้คะแนน
+  Widget _buildRatingSection() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text("ให้คะแนน",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        SizedBox(width: 20),
+        RatingBar.builder(
+          initialRating: _rating,
+          minRating: 1,
+          direction: Axis.horizontal,
+          allowHalfRating: true,
+          itemCount: 5,
+          itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
+          onRatingUpdate: (rating) {
+            setState(() {
+              _rating = rating;
+            });
+            if (mounted) {
+              _confettiController.play();
+            }
+          },
+        ),
+        SizedBox(width: 20),
+        Text("$_rating",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
       ],
     );
   }

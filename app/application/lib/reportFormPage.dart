@@ -1,155 +1,131 @@
-import 'dart:io';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:application/main.dart';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:form_field_validator/form_field_validator.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
+import 'reportForm.dart';
 
-class ApiService {
-  final Dio _dio = Dio();
-
-  Future<Map<String, dynamic>?> createPost(
-      // DatePickerDialog date_time,
-      String description,
-      // int problem_type_id,
-      // String location,
-      // int urgency_id,
-      // int status_id,
-      String f_name,
-      // String l_name,
-      String eamil) async {
-    try {
-      final response = await _dio.post(
-        'http://26.21.85.254:8080/Reportig/api/report.php',
-        data: {
-          "date_time": "2024-02-07 14:30:00",
-          "description": description,
-          "problem_type_id": 2,
-          "location": "ถนนสุขุมวิท 555",
-          "urgency_id": 2,
-          "status_id": 1,
-          "f_name": f_name,
-          "l_name": "ใจดี",
-          "email": eamil,
-        },
-      );
-      print(response.data);
-      return response.data;
-    } catch (e) {
-      print('Error: $e');
-      return null;
-    }
-  }
-}
-
-// 📄 หน้าแจ้งปัญหา
 class ReportFormPage extends StatefulWidget {
   const ReportFormPage({super.key});
 
   @override
   _ReportFormPageState createState() => _ReportFormPageState();
 }
+class SplashForm extends StatefulWidget {
+  @override
+  _SplashFormState createState() => _SplashFormState();
+}
 
-// 📄 หน้าแบบฟอร์ม
 class _ReportFormPageState extends State<ReportFormPage> {
-  final ApiService apiService = ApiService();
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _detailController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  String _selectedCategory = "อาคาร";
-  String _selectedUrgency = "ภายใน 3 วัน"; // ค่าตั้งต้นของความเร่งด่วน
-  List<File> _selectedImages = []; // สำหรับมือถือ
-  List<Uint8List> _selectedImagesWeb = []; // สำหรับเว็บ
+  final TextEditingController _locationController = TextEditingController();
+  String _selectedCategory = "ถนน";
+  String _selectedUrgency = "ภายใน 3 วัน";
+  List<Uint8List> _selectedImages = [];
   String responseText = '';
-  DateTime now = DateTime.now();
+  bool isLoading = false;
 
-  void sendPost() async {
-    if (_detailController.text.isEmpty ||
-        _nameController.text.isEmpty ||
-        _emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("กรุณากรอกข้อมูลให้ครบถ้วน")),
-      );
-      return;
-    }
-    final response = await apiService.createPost(
-      _detailController.text,
-      _nameController.text,
-      _emailController.text,
-    );
-    setState(() {
-      responseText = response != null
-          ? 'Post Created: ${response['email']}'
-          : 'Error creating post';
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("ส่งข้อมูลสำเร็จ!")),
-    );
-    // กลับไปหน้าหลัก
-    Navigator.pop(context);
-  }
-
-  // 📷 เลือกรูปจากอุปกรณ์
+  /// 📌 ฟังก์ชันเลือกรูปภาพ รองรับทั้ง Mobile และ Web
   Future<void> _pickImages() async {
-    if (kIsWeb) {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        allowMultiple: true, // อนุญาตให้เลือกหลายไฟล์
-      );
+    FilePickerResult? result = await FilePicker.platform
+        .pickFiles(allowMultiple: true, withData: true);
 
-      if (result != null) {
-        setState(() {
-          _selectedImagesWeb = result.files.map((file) => file.bytes!).toList();
-        });
-      }
-    } else {
-      final ImagePicker picker = ImagePicker();
-      final List<XFile>? pickedFiles = await picker.pickMultiImage();
-
-      if (pickedFiles != null) {
-        setState(() {
-          _selectedImages = pickedFiles.map((file) => File(file.path)).toList();
-        });
-      }
+    if (result != null) {
+      setState(() {
+        _selectedImages = result.files.map((file) => file.bytes!).toList();
+      });
     }
   }
 
-  // Google Maps
-  late GoogleMapController mapController;
-  final LatLng _center = const LatLng(13.7563, 100.5018); // Bangkok
+  /// 📌 ฟังก์ชันส่งข้อมูลไปยังเซิร์ฟเวอร์
+  Future<void> sendPost() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        isLoading = true;
+      });
 
-  void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
+      ReportForm reportForm = ReportForm(
+        dateTime: DateTime.now(),
+        description: _detailController.text,
+        problemTypeId: (() {
+          switch (_selectedCategory) {
+            case "ถนน":
+              return 1;
+            case "สะพาน":
+              return 2;
+            case "อาคาร":
+              return 3;
+            case "ไฟฟ้า":
+              return 4;
+            case "น้ำเสีย":
+              return 5;
+            default:
+              return 0;
+          }
+        })(),
+        location: _locationController.text,
+        urgencyId: _selectedUrgency == "ภายใน 3 วัน"
+            ? 1
+            : (_selectedUrgency == "ภายใน 1 สัปดาห์" ? 2 : 3),
+        statusId: 1,
+        fName: _nameController.text.split(' ')[0],
+        lName: _nameController.text.split(' ').length > 1
+            ? _nameController.text.split(' ')[1]
+            : "",
+        email: _emailController.text,
+        reportImages: _selectedImages, // 📌 ใช้รูปภาพที่เป็น `Uint8List`
+      );
+
+      String response = await reportForm.uploadReport();
+
+      setState(() {
+        responseText = response.contains("success")
+            ? 'Post Created Successfully'
+            : 'Error creating post';
+      });
+
+      Future.delayed(const Duration(seconds: 3), () {
+        setState(() {
+          isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("ส่งข้อมูลสำเร็จ!")),
+        );
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => HomePage()));
+      });
+    }
   }
 
-// ช่องแนบรูปภาพที่ปรับขนาดอัตโนมัติ
+  /// 📌 แสดงตัวอย่างรูปภาพที่เลือก
   Widget _buildImagePreview(BuildContext context) {
-    double itemSize = (MediaQuery.of(context).size.width - 64) /
-        2; // คำนวณขนาดของรูปภาพให้พอดีกับ 2 รูปในแถว
-
     return GridView.builder(
-      shrinkWrap: true, // ทำให้ GridView ย่อขนาดตามขนาดของเนื้อหาภายใน
-      physics: NeverScrollableScrollPhysics(), // ปิดการเลื่อน
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, // จำนวนคอลัมน์ (แถวละ 2 รูป)
-        crossAxisSpacing: 8.0, // ระยะห่างระหว่างรูป
-        mainAxisSpacing: 8.0, // ระยะห่างในแนวตั้ง
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 8.0,
+        mainAxisSpacing: 8.0,
       ),
-      itemCount: kIsWeb ? _selectedImagesWeb.length : _selectedImages.length,
+      itemCount: _selectedImages.length,
       itemBuilder: (context, index) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: Container(
-            width: itemSize,
-            height: itemSize,
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: kIsWeb
-                ? Image.memory(_selectedImagesWeb[index], fit: BoxFit.cover)
-                : Image.file(_selectedImages[index], fit: BoxFit.cover),
+            child: Image.memory(_selectedImages[index], fit: BoxFit.cover),
           ),
         );
       },
@@ -159,7 +135,7 @@ class _ReportFormPageState extends State<ReportFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[100], // พื้นหลังนอกฟอร์ม
+      backgroundColor: Colors.green[100],
       appBar: AppBar(
         title: const Text("แจ้งปัญหา", style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.green[300],
@@ -167,160 +143,129 @@ class _ReportFormPageState extends State<ReportFormPage> {
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: Center(
-        // จัดให้อยู่ตรงกลาง
         child: ConstrainedBox(
-          constraints:
-              const BoxConstraints(maxWidth: 700), // จำกัดกว้างสุด 700px
+          constraints: const BoxConstraints(maxWidth: 700),
           child: Card(
-            // ใช้ Card เพื่อเพิ่มเงา และพื้นหลัง
-            color: Colors.white, // พื้นหลังฟอร์ม
-            elevation: 5, // เพิ่มเงา
+            color: Colors.white,
+            elevation: 5,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("รายละเอียดการแจ้งปัญหา"),
-                    TextField(
-                      controller: _detailController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        hintText: "กรุณาพิมพ์รายละเอียดที่ต้องการแจ้ง",
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Dropdown ประเภทปัญหา
-                    const Text("เลือกประเภทปัญหา"),
-                    DropdownButtonFormField<String>(
-                      value: _selectedCategory,
-                      items: ["อาคาร", "ถนน", "ไฟฟ้า", "น้ำเสีย"]
-                          .map((String category) {
-                        return DropdownMenuItem(
-                            value: category, child: Text(category));
-                      }).toList(),
-                      onChanged: (newValue) {
-                        setState(() {
-                          _selectedCategory = newValue!;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // ชื่อ-นามสกุล
-                    const Text("ชื่อ-นามสกุล ผู้แจ้ง"),
-                    TextField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        hintText: "กรุณากรอกชื่อ-นามสกุล",
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // อีเมล
-                    const Text("อีเมลผู้แจ้ง"),
-                    TextField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        hintText: "เช่น abc@gmail.com",
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // แนบรูปภาพ
-                    // แนบรูปภาพ
-                    const Text("แนบรูปภาพ"),
-                    GestureDetector(
-                      onTap: _pickImages,
-                      child: Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(8),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("รายละเอียดการแจ้งปัญหา"),
+                      TextFormField(
+                        controller: _detailController,
+                        decoration: InputDecoration(
+                          hintText: "กรุณาพิมพ์รายละเอียดที่ต้องการแจ้ง",
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: _selectedImages.isNotEmpty ||
-                                  _selectedImagesWeb.isNotEmpty
-                              ? _buildImagePreview(context)
-                              : const Center(child: Text("แตะเพื่อเลือกภาพ")),
-                        ),
+                        validator:
+                            RequiredValidator(errorText: "กรุณากรอกข้อมูล"),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // แผนที่ Google Map
-                    const Text("สถานที่เกิดปัญหา (คลิกแผนที่เพื่อเลือก)"),
-                    SizedBox(
-                      height: 300,
-                      child: GoogleMap(
-                        onMapCreated: _onMapCreated,
-                        initialCameraPosition:
-                            CameraPosition(target: _center, zoom: 15),
-                        markers: {
-                          Marker(
-                              markerId: const MarkerId("selectedLocation"),
-                              position: _center),
+                      const SizedBox(height: 10),
+                      const Text("เลือกประเภทปัญหา"),
+                      DropdownButtonFormField<String>(
+                        value: _selectedCategory,
+                        items: ["ถนน", "สะพาน", "อาคาร", "ไฟฟ้า", "น้ำเสีย"]
+                            .map((String category) {
+                          return DropdownMenuItem(
+                              value: category, child: Text(category));
+                        }).toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            _selectedCategory = newValue!;
+                          });
                         },
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // 🔥 เลือกความเร่งด่วน
-                    const Text("ระดับความเร่งด่วน"),
-                    DropdownButtonFormField<String>(
-                      value: _selectedUrgency,
-                      items: [
-                        "ภายใน 3 วัน",
-                        "ภายใน 7 วัน",
-                        "ภายใน 14 วัน",
-                        "ไม่เร่งด่วน"
-                      ].map((String urgency) {
-                        return DropdownMenuItem(
-                            value: urgency, child: Text(urgency));
-                      }).toList(),
-                      onChanged: (newValue) {
-                        setState(() {
-                          _selectedUrgency = newValue!;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // ปุ่มส่งข้อมูล
-                    Center(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 40, vertical: 15),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
                         ),
-                        onPressed: () {
-                          sendPost();
-                        },
-                        child: const Text("ส่งข้อมูล",
-                            style: TextStyle(color: Colors.white)),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 10),
+                      const Text("ชื่อ-นามสกุล ผู้แจ้ง"),
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: InputDecoration(
+                          hintText: "กรุณากรอกชื่อ-นามสกุล",
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
+                        validator: MultiValidator([
+                          RequiredValidator(errorText: 'กรุณากรอกชื่อ-นามสกุล')
+                        ]),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text("อีเมลผู้แจ้ง"),
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          hintText: "เช่น abc@gmail.com",
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
+                        validator: MultiValidator([
+                          RequiredValidator(errorText: 'กรุณากรอกอีเมล'),
+                          EmailValidator(errorText: 'รูปแบบอีเมลไม่ถูกต้อง')
+                        ]),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text("สถานที่เกิดเหตุ"),
+                      TextFormField(
+                        controller: _locationController,
+                        decoration: InputDecoration(
+                          hintText: "กรุณากรอกสถานที่เกิดเหตุ",
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
+                        validator: RequiredValidator(
+                            errorText: "กรุณากรอกสถานที่เกิดเหตุ"),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text("แนบรูปภาพ"),
+                      GestureDetector(
+                        onTap: _pickImages,
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: _selectedImages.isNotEmpty
+                                ? _buildImagePreview(context)
+                                : const Center(child: Text("แตะเพื่อเลือกภาพ")),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          isLoading
+                              ? Center(
+                                  child: CircularProgressIndicator(
+                                      color: Colors.green[300]))
+                              : ElevatedButton(
+                                  onPressed: sendPost,
+                                  style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green[200]),
+                                  child: const Text("ส่งข้อมูล",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -329,23 +274,30 @@ class _ReportFormPageState extends State<ReportFormPage> {
       ),
     );
   }
+}
+class _SplashFormState extends State<SplashForm> {
+  @override
+  void initState() {
+    super.initState();
+    // ตั้งเวลาให้โหลด 3 วินาทีก่อนเปลี่ยนไปหน้าหลัก
+    Timer(Duration(seconds: 1), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ReportFormPage()),
+      );
+    });
+  }
 
-  // void _submitForm() {
-  //   String details = _detailController.text;
-  //   String name = _nameController.text;
-  //   String email = _emailController.text;
-
-  //   if (details.isEmpty || name.isEmpty || email.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text("กรุณากรอกข้อมูลให้ครบถ้วน")),
-  //     );
-  //     return;
-  //   }
-
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     const SnackBar(content: Text("ส่งข้อมูลสำเร็จ!")),
-  //   );
-  //   // กลับไปหน้าหลัก
-  //   Navigator.pop(context);
-  // }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: SpinKitFadingCircle(
+          color: Colors.green,
+          size: 50.0,
+        ),
+      ),
+    );
+  }
 }
